@@ -1,27 +1,80 @@
 <?php
-$host = "localhost";
-$user = "root";
-$password = "";
-$database = "motion_db";
 
+$conn = mysqli_connect("localhost","root","","Motion_db");
 
-$conn = mysqli_connect($host, $user, $password, $database);
-
-if (!$conn) {
-    echo"Connection failed: "
-
-}
-else
-  cho "Connected successfully";
-$data=json_decode(file_get_contents)
-(http:/input),true);
-if($data)
-  {$distance=$data["distance"];}
-$insert=mysqli_query($conn,"INSERT INTO motion_table(distance) VALUES('$distance')");
-if(insert)
-  {echo"Data inserted successfully";}
-else
-  {echo"Error inserting data: " . mysqli_error($conn);}
-else
-  {echo"No data received";}
 ?>
+
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Motion Detection Dashboard</title>
+
+<style>
+
+body{
+    font-family: Arial;
+    background:#f4f4f4;
+    padding:20px;
+}
+
+table{
+    width:100%;
+    border-collapse: collapse;
+    background:white;
+}
+
+table th, table td{
+    border:1px solid #000;
+    padding:10px;
+    text-align:center;
+}
+
+th{
+    background:blue;
+    color:white;
+}
+
+h1{
+    text-align:center;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h>  Dashboard</h1>
+
+<table>
+
+<tr>
+    <th>ID</th>
+    <th>Motion Detected</th>
+    <th>Timestamp</th>
+</tr>
+
+<?php
+
+$query = mysqli_query($conn,
+"SELECT * FROM Motion_data ORDER BY Id DESC");
+
+while($row = mysqli_fetch_assoc($query)){
+
+?>
+
+<tr>
+<tr>
+    <td><?php echo $row['ID']; ?></td>
+    <td><?php echo $row['motion_detected']; ?></td>
+    <td><?php echo $row['timestamp']; ?></td>
+</tr>
+</tr>
+
+<?php } ?>
+
+</table>
+
+</body>
+</html>
