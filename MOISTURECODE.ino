@@ -1,39 +1,103 @@
+#include <WiFi.h>
 #include <Wire.h>
-#include <LiquidCrystal_I2C.h>
-const int sensorPin = A0;  
-const int relayPin =7;     
-LiquidCrystal_I2C lcd(0x27, 16, 2);
-const int dryValue = 1023;  
-const int wetValue = 0;     
+#include <I2CSoilMoistureSensor.h>
+
+#define RED_LED 2
+#define BLUE_LED 4
+
+I2CSoilMoistureSensor sensor;
+
+char ssid[] = "AAL";
+char pass[] = "mugabe123";
+
+WiFiClient client;
+
+void connectWiFi();
+void sendData(int moisture);
+
 void setup() {
-  pinMode(relayPin, OUTPUT);
-  lcd.init();
-  lcd.backlight();
-  Serial.begin(9600);
+
+  Wire.begin();
+
+  Serial.begin(115200);
+
+  pinMode(RED_LED, OUTPUT);
+  pinMode(BLUE_LED, OUTPUT);
+
+  sensor.begin();
+
+  delay(1000);
+
+  connectWiFi();
+
+  Serial.println("Soil Moisture Project Ready");
 }
-void loop() { 
-  int rawValue = analogRead(sensorPin);
-  int humidity = map(rawValue, dryValue, wetValue, 0, 100);
-  humidity = constrain(humidity, 0, 100);
-  lcd.clear();
-  if (humidity > 70) {
-    digitalWrite(relayPin, LOW); 
-    lcd.setCursor(0, 0);
-    lcd.print("Humidifier: OFF");
-    lcd.setCursor(0, 1);
-    lcd.print("Humid: ");
-    lcd.print(humidity);
-    lcd.print(" %");
-  } 
-  else {
-    digitalWrite(relayPin, HIGH); 
-    
-    lcd.setCursor(0, 0);
-    lcd.print("Humidifier: ON ");
-    lcd.setCursor(0, 1);
-    lcd.print("Humid: ");
-    lcd.print(humidity);
-    lcd.print(" %");
+
+void loop() {
+
+  while (sensor.isBusy()) {
+    delay(50);
   }
-  delay(2000);
-} 
+
+  int moisture = sensor.getCapacitance();
+
+  Serial.print("Moisture: ");
+  Serial.println(moisture);
+
+  // Soil Dry
+  if (moisture < 400) {
+
+    digitalWrite(RED_LED, HIGH);
+    digitalWrite(BLUE_LED, LOW);
+
+    Serial.println("Soil is Dry");
+
+  }
+
+  // Soil Wet
+  else {
+
+    digitalWrite(RED_LED, LOW);
+    digitalWrite(BLUE_LED, HIGH);
+
+    Serial.println("Soil is Wet");
+  }
+
+  sendData(moisture);
+
+  sensor.sleep();
+
+  delay(5000);
+}
+
+void connectWiFi() {
+
+  WiFi.begin(ssid, pass);
+
+  while (WiFi.status() != WL_CONNECTED) {
+
+    delay(1000);
+
+    Serial.println("Connecting...");
+  }
+
+  Serial.println("WiFi Connected");
+}
+
+void sendData(int moisture) {
+
+  if (client.connect("192.168.137.1", 80)) {
+
+    client.print("GET /soil/insert.php?moisture=");
+    client.print(moisture);
+    client.println(" HTTP/1.1");
+
+    client.println("Host: 192.168.137.1");
+    client.println("Connection: close");
+    client.println();
+
+    client.stop();
+
+    Serial.println("Data Sent");
+  }
+}
