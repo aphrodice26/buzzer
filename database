@@ -1,0 +1,8 @@
+ CREATE DATABASE iot_security;
+ USE iot_security;
+ CREATE TABLE security_data (
+    ->     id INT AUTO_INCREMENT PRIMARY KEY,
+    ->     distance FLOAT NOT NULL,
+    ->     status VARCHAR(50) NOT NULL,
+    ->     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    -> );
